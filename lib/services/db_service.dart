@@ -113,7 +113,8 @@ class DbService {
   await db.insert('users', {
     'id': '1',
     'name': 'Admin',
-    'role': 'UserRole.admin',
+    // 'role': 'UserRole.admin',
+    'role': UserRole.admin.name,
     'email': 'admin@example.com',
     'password': 'hashed_password_here'
   });
@@ -132,22 +133,6 @@ class DbService {
     }
     return null;
   }
-/*Future<User?> authenticateUser(String email, String password) async {
-  final db = await instance.database;
-  final List<Map<String, dynamic>> maps = await db.query(
-    'users',
-    where: 'email = ?',
-    whereArgs: [email],
-  );
-
-  if (maps.isNotEmpty) {
-    final user = User.fromMap(maps.first);
-    if (User.verifyPassword(password, user.password ?? '')) {
-      return user;
-    }
-  }
-  return null;
-}*/
 
 Future<bool> _comparePasswords(String plainPassword, String hashedPassword) async {
   // Implement proper password comparison
@@ -200,10 +185,6 @@ Future<User?> getUserByEmail(String email) async {
   return null;
 }
 
-/*Future<void> addUser(User user) async {
-  final db = await instance.database;
-  await db.insert('users', user.toMap());
-}*/
 Future<void> addUser(User user) async {
   try {
     final db = await instance.database;

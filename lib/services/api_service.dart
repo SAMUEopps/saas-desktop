@@ -4,6 +4,7 @@ import '../models/record_model.dart';
 import '../models/user_model.dart';
 
 class ApiService {
+  //static const String _baseUrl = 'http://localhost:5000/api';
   static const String _baseUrl = 'https://malexoffice.onrender.com/api';
   String? _token;
 
@@ -24,31 +25,6 @@ class ApiService {
     };
   }
 
-  /*Future<User> register({
-    required String name,
-    required String email,
-    required String password,
-    required UserRole role,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/users/register'),
-      headers: _headers,
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'password': password,
-        'role': role.toString().split('.').last,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      await setToken(data['token']);
-      return User.fromMap(data['user']);
-    } else {
-      throw Exception(jsonDecode(response.body)['error'] ?? 'Registration failed');
-    }
-  }*/
   Future<User> register({
   required String name,
   required String email,
@@ -78,8 +54,15 @@ class ApiService {
     throw Exception(error);
   }
 }
+Future<User> login(String email, String password) async {
+  print('[LOGIN] Sending login request to $_baseUrl/users/login');
+  print('[LOGIN] Headers: $_headers');
+  print('[LOGIN] Body: ${jsonEncode({
+    'email': email,
+    'password': password,
+  })}');
 
-  /*Future<User> login(String email, String password) async {
+  try {
     final response = await http.post(
       Uri.parse('$_baseUrl/users/login'),
       headers: _headers,
@@ -89,40 +72,29 @@ class ApiService {
       }),
     );
 
+    print('[LOGIN] Received response with status code: ${response.statusCode}');
+
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print('[LOGIN SUCCESS] Token received: ${data['token'] != null ? 'Yes' : 'No'}');
+      print('[LOGIN SUCCESS] User info: ${data['user']}');
+
       await setToken(data['token']);
-      return User.fromMap(data['user']);
+      final user = User.fromMap(data['user']);
+
+      print('[LOGIN COMPLETE] User ${user.email} authenticated successfully.');
+      return user;
     } else {
-      throw Exception(jsonDecode(response.body)['error'] ?? 'Login failed');
+      final errorMsg = jsonDecode(response.body)['error'] ?? 'Login failed with unknown error';
+      print('[LOGIN FAILED] Server responded with error: $errorMsg');
+      throw Exception(errorMsg);
     }
-  }*/
-  Future<User> login(String email, String password) async {
-  // Log the request details
-  print('Sending login request to $_baseUrl/users/login');
-  print('Headers: $_headers');
-  print('Body: ${jsonEncode({
-    'email': email,
-    'password': password,
-  })}');
-
-  final response = await http.post(
-    Uri.parse('$_baseUrl/users/login'),
-    headers: _headers,
-    body: jsonEncode({
-      'email': email,
-      'password': password,
-    }),
-  );
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    await setToken(data['token']);
-    return User.fromMap(data['user']);
-  } else {
-    throw Exception(jsonDecode(response.body)['error'] ?? 'Login failed');
+  } catch (e) {
+    print('[LOGIN ERROR] An exception occurred during login: $e');
+    rethrow;
   }
 }
+
 
   Future<void> logout() async {
     final response = await http.post(
@@ -185,7 +157,8 @@ class ApiService {
         'name': name,
         'email': email,
         'password': password,
-        'role': role.toString().split('.').last,
+        'role': role.name, 
+        //'role': role.toString().split('.').last,
       }),
     );
 
@@ -211,75 +184,6 @@ class ApiService {
     }
   }
 
- /* Future<void> updateUser(User user) async {
-    final response = await http.put(
-      Uri.parse('$_baseUrl/users/${user.id}'),
-      headers: _headers,
-      body: jsonEncode(user.toMap()),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update user');
-    }
-  }
-
-  Future<void> deleteUser(String userId) async {
-    final response = await http.delete(
-      Uri.parse('$_baseUrl/users/$userId'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to delete user');
-    }
-  }
-}*/
-
-  /*Future<void> updateUser(User user) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/users/${user.id}'),
-        headers: _headers,
-        body: jsonEncode(user.toMap()),
-      );
-
-      if (response.statusCode == 200) {
-        print('User updated successfully on backend: ${user.id}');
-      } else {
-        print('Failed to update user on backend. Status code: ${response.statusCode}, Response: ${response.body}');
-        throw Exception('Failed to update user');
-      }
-    } catch (e) {
-      print('Exception occurred while updating user: $e');
-      throw Exception('Failed to update user');
-    }
-  }*/
-
-  /*Future<void> updateUser(User user) async {
-  try {
-    final Map<String, dynamic> allowedFields = {
-      'name': user.name,
-      'email': user.email,
-      'role': user.role.displayName,
-    };
-
-    final response = await http.put(
-      Uri.parse('$_baseUrl/users/${user.id}'),
-      headers: _headers,
-      body: jsonEncode(allowedFields),
-    );
-
-    if (response.statusCode == 200) {
-      print('User updated successfully on backend: ${user.id}');
-    } else {
-      print('Failed to update user on backend. Status code: ${response.statusCode}, Response: ${response.body}');
-      throw Exception('Failed to update user');
-    }
-  } catch (e) {
-    print('Exception occurred while updating user: $e');
-    throw Exception('Failed to update user');
-  }
-}*/
 Future<void> updateUser(User user) async {
   try {
     final Map<String, dynamic> allowedFields = {
@@ -342,4 +246,54 @@ Future<void> updateUser(User user) async {
     throw Exception('Failed to update password');
   }
 }
+Future<User> getUserByEmail(String email) async {
+  final encodedEmail = Uri.encodeComponent(email);
+  final response = await http.get(
+    Uri.parse('$_baseUrl/users/email/$encodedEmail'),
+    headers: _headers,
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final user = User.fromMap(data['user']);
+    print('User fetched: ${user.name} (${user.email})');
+    return user;
+  } else {
+    final error = jsonDecode(response.body)['error'] ?? 'Failed to fetch user';
+    print('Fetch user by email failed: $error');
+    throw Exception(error);
+  }
+}
+
+Future<void> updateRecord(Record record) async {
+  final response = await http.put(
+    Uri.parse('$_baseUrl/records/${record.id}'),
+    headers: _headers,
+    body: jsonEncode(record.toMap()),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to update record');
+  }
+}
+
+Future<void> deleteRecord(String recordId) async {
+  try {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/records/$recordId'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      print('Record deleted successfully on backend: $recordId');
+    } else {
+      print('Failed to delete record on backend. Status code: ${response.statusCode}, Response: ${response.body}');
+      throw Exception('Failed to delete record');
+    }
+  } catch (e) {
+    print('Exception occurred while deleting record: $e');
+    throw Exception('Failed to delete record');
+  }
+}
+
 }

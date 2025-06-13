@@ -6,8 +6,8 @@ import '../controllers/auth_controller.dart';
 import '../controllers/record_controller.dart';
 import '../models/user_model.dart';
 import 'record_form_view.dart';
-import 'records_table_view.dart';
 import 'user_management_view.dart';
+import 'records_table_view.dart'; // Ensure this import is correct
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -25,10 +25,10 @@ class _DashboardViewState extends State<DashboardView> {
     });
   }
 
-  /*Widget _buildUserProfileCard(BuildContext context, User user) {
+  Widget _buildUserProfileCard(BuildContext context, User user) {
     return Card(
       elevation: 0,
-       color: const Color(0xFFF7F7F7),
+      color: const Color(0xFFF7F7F7),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200, width: 1),
@@ -57,16 +57,16 @@ class _DashboardViewState extends State<DashboardView> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+                    if (user.role != UserRole.storeManager)
+                      Text(
+                        user.name,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getRoleColor(user.role).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -84,93 +84,20 @@ class _DashboardViewState extends State<DashboardView> {
               ],
             ),
             const SizedBox(height: 20),
-            Divider(color: Colors.grey.shade200),
-            const SizedBox(height: 12),
-            _buildUserInfoRow(Icons.email, user.email),
-            const SizedBox(height: 12),
-            _buildUserInfoRow(Iconsax.calendar, 
-              'Joined ${DateFormat.yMMMd().format(DateTime.now())}'),
-            const SizedBox(height: 12),
-            _buildUserInfoRow(Iconsax.shield, 
-              'Permissions: ${_getPermissions(user.role)}'),
+            if (user.role != UserRole.storeManager) ...[
+              Divider(color: Colors.grey.shade200),
+              const SizedBox(height: 12),
+              _buildUserInfoRow(Icons.email, user.email),
+              const SizedBox(height: 12),
+              _buildUserInfoRow(Iconsax.calendar, 'Joined ${DateFormat.yMMMd().format(DateTime.now())}'),
+              const SizedBox(height: 12),
+            ],
+            _buildUserInfoRow(Iconsax.shield, 'Permissions: ${_getPermissions(user.role)}'),
           ],
         ),
       ),
     );
-  }*/
-  Widget _buildUserProfileCard(BuildContext context, User user) {
-  return Card(
-    elevation: 0,
-    color: const Color(0xFFF7F7F7),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(color: Colors.grey.shade200, width: 1),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.blue.shade100,
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 30,
-                  color: Colors.blue.shade800,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (user.role != UserRole.storeManager)
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getRoleColor(user.role).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      user.role.displayName,
-                      style: TextStyle(
-                        color: _getRoleColor(user.role),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (user.role != UserRole.storeManager) ...[
-            Divider(color: Colors.grey.shade200),
-            const SizedBox(height: 12),
-            _buildUserInfoRow(Icons.email, user.email),
-            const SizedBox(height: 12),
-            _buildUserInfoRow(Iconsax.calendar, 'Joined ${DateFormat.yMMMd().format(DateTime.now())}'),
-            const SizedBox(height: 12),
-          ],
-          _buildUserInfoRow(Iconsax.shield, 'Permissions: ${_getPermissions(user.role)}'),
-        ],
-      ),
-    ),
-  );
-}
+  }
 
   Widget _buildUserInfoRow(IconData icon, String text) {
     return Row(
@@ -211,34 +138,30 @@ class _DashboardViewState extends State<DashboardView> {
     List<Map<String, dynamic>> actions = [];
 
     if (role == UserRole.admin || role == UserRole.storeManager) {
-      actions.addAll([
-        {
-          'icon': Iconsax.add,
-          'label': 'Add Record',
-          'color': Colors.blue,
-          'onTap': () {
-            showDialog(
-              context: context,
-              builder: (context) => const RecordFormView(),
-            );
-          },
+      actions.add({
+        'icon': Iconsax.add,
+        'label': 'Add Record',
+        'color': Colors.blue,
+        'onTap': () {
+          showDialog(
+            context: context,
+            builder: (context) => const RecordFormView(),
+          );
         },
-      ]);
+      });
     }
 
     if (role == UserRole.admin) {
-      actions.addAll([
-          {
-            'icon': Iconsax.user,
-            'label': 'Manage Users',
-            'color': Colors.purple,
-            'onTap': () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const UserManagementView()),
-              );
-            },
-          },
-      ]);
+      actions.add({
+        'icon': Iconsax.user,
+        'label': 'Manage Users',
+        'color': Colors.purple,
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const UserManagementView()),
+          );
+        },
+      });
     }
 
     return GridView.count(
@@ -311,11 +234,9 @@ class _DashboardViewState extends State<DashboardView> {
       body: records.isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-             
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-              
                 children: [
                   Text(
                     user.role == UserRole.storeManager
@@ -334,8 +255,6 @@ class _DashboardViewState extends State<DashboardView> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  // User profile and quick actions row
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -350,28 +269,22 @@ class _DashboardViewState extends State<DashboardView> {
                           children: [
                             Card(
                               elevation: 0,
-                              color: const Color(0xFFF7F7F7), 
+                              color: const Color(0xFFF7F7F7),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: Colors.grey.shade200, 
-                                  width: 1),
+                                side: BorderSide(color: Colors.grey.shade200, width: 1),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(20),
-                                 
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                 
                                   children: [
                                     Text(
                                       'Quick Actions',
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          ?.copyWith(fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 16),
                                     _buildQuickActions(context, user.role),
@@ -392,21 +305,19 @@ class _DashboardViewState extends State<DashboardView> {
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(color: Colors.grey.shade200, width: 1),
                     ),
-                  child: Container(
-                     color: const Color(0xFFF7F7F7),
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: RecordsTableView(),
+                    child: Container(
+                      color: const Color(0xFFF7F7F7),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: RecordsTableView(),
+                      ),
                     ),
                   ),
-
-                  ),
-                  const SizedBox(height: 16), 
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-      floatingActionButton: user.role == UserRole.admin ||
-              user.role == UserRole.storeManager
+      floatingActionButton: user.role == UserRole.admin || user.role == UserRole.storeManager
           ? FloatingActionButton(
               onPressed: () {
                 showDialog(

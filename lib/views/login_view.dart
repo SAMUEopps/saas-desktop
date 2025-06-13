@@ -15,46 +15,7 @@ class LoginView extends StatefulWidget {
   @override
   State<LoginView> createState() => _LoginViewState();
 }
-
-/*Future<void> checkForUpdate(BuildContext context) async {
-  const currentVersion = "1.0.0";
-  const versionUrl = "https://raw.githubusercontent.com/SAMUEopps/my_windows_app/main/version.json";
-
-  try {
-    final response = await http.get(Uri.parse(versionUrl));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final latestVersion = data['latest_version'];
-      final downloadUrl = data['download_url'];
-
-      if (latestVersion != currentVersion) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            title: const Text("Update Available"),
-            content: Text("A new version ($latestVersion) is available. Do you want to update now?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Later"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
-                  Navigator.pop(context);
-                },
-                child: const Text("Update Now"),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-  } catch (e) {
-    debugPrint("Update check failed: $e");
-  }
-}*/
+bool _obscurePassword = true; // 👈 add this
 
 Future<void> checkForUpdate(BuildContext context) async {
   const versionUrl = "https://raw.githubusercontent.com/SAMUEopps/my_windows_app/main/version.json";
@@ -73,33 +34,6 @@ Future<void> checkForUpdate(BuildContext context) async {
       final data = jsonDecode(response.body);
       final latestVersion = Version.parse(data['latest_version']);
       final downloadUrl = data['download_url'];
-
-      // Only show update if latest version is greater than current
-     /* if (latestVersion > currentVersion) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            title: const Text("Update Available"),
-            content: Text("A new version ($latestVersion) is available. Do you want to update now?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Later"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
-                  Navigator.pop(context);
-                },
-                child: const Text("Update Now"),
-              ),
-            ],
-          ),
-        );
-      } else {
-        //print("App is up to date.");
-      }*/
       // Only show update if latest version is greater than current
 if (latestVersion > currentVersion) {
   showDialog(
@@ -319,37 +253,48 @@ void initState() {
                             
                             // Password Field
                             TextFormField(
-                              controller: _passwordController,
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: Icon(Icons.lock_outline, color: Colors.blue.shade400),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                            controller: _passwordController,
+                            obscureText: _obscurePassword, // 👈 toggle this
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: Icon(Icons.lock_outline, color: Colors.blue.shade400),
+                              suffixIcon: IconButton( // 👈 toggle icon
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey,
                                 ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.blue.shade400, width: 2),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
                               ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.blue.shade400, width: 2),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                             ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
                             
                             const SizedBox(height: 24),
                             
@@ -393,7 +338,7 @@ void initState() {
                       ),
                       const SizedBox(height: 16),
                   // Register Link
-                   /* TextButton(
+                   TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/register');
                       },
@@ -405,7 +350,7 @@ void initState() {
                           decoration: TextDecoration.underline,
                         ),
                       ),
-                    ),*/
+                    ),
                     ],
                   ),
                 ),

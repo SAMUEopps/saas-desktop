@@ -1,45 +1,3 @@
-// controllers/record_controller.dart
-/*import 'package:flutter/material.dart';
-import '../models/record_model.dart';
-import '../services/db_service.dart';
-
-class RecordController with ChangeNotifier {
-  final DbService _db = DbService.instance;
-  List<Record> _records = [];
-  bool _isLoading = false;
-
-  List<Record> get records => _records;
-  bool get isLoading => _isLoading;
-
-  Future<void> loadRecords() async {
-    _isLoading = true;
-    notifyListeners();
-    
-    _records = await _db.getRecords();
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> addRecord(Record record) async {
-    await _db.addRecord(record);
-    await loadRecords();
-  }
-
-  Future<void> updateRecord(Record record) async {
-    await _db.updateRecord(record);
-    await loadRecords();
-  }
-
-  Future<void> deleteRecord(String id) async {
-    await _db.deleteRecord(id);
-    await loadRecords();
-  }
-
-  List<Record> getRecordsForFacilitator(String facilitatorName) {
-    return _records.where((r) => r.facilitator == facilitatorName).toList();
-  }
-}*/
 import 'package:flutter/material.dart';
 import '../models/record_model.dart';
 import '../services/db_service.dart';
@@ -56,7 +14,7 @@ class RecordController with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSyncing => _isSyncing;
 
-  Future<void> loadRecords() async {
+  /*Future<void> loadRecords() async {
     _isLoading = true;
     notifyListeners();
     
@@ -64,7 +22,29 @@ class RecordController with ChangeNotifier {
     
     _isLoading = false;
     notifyListeners();
+  }*/
+    Future<void> loadRecords() async {
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      // First try to fetch from API
+      _records = await _api.getRemoteRecords();
+      
+      // Update local DB with fetched records
+      for (final record in _records) {
+        await _db.updateRecord(record);
+      }
+    } catch (e) {
+      // If API fails, fall back to local DB
+      print('Failed to fetch from API, using local data: $e');
+      _records = await _db.getRecords();
+    }
+    
+    _isLoading = false;
+    notifyListeners();
   }
+
 
   Future<void> syncRecords() async {
     if (_isSyncing) return;

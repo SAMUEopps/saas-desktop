@@ -75,17 +75,17 @@ class User {
   final String name;
   final UserRole role;
   final String email;
-  final String? passwordHash;
+  final String? password;
 
   User({
     required this.id,
     required this.name,
     required this.role,
     required this.email,
-    this.passwordHash,
+    this.password,
   });
 
-  factory User.fromMap(Map<String, dynamic> map) {
+  /*factory User.fromMap(Map<String, dynamic> map) {
     return User(
       id: map['id'],
       name: map['name'],
@@ -94,9 +94,23 @@ class User {
         orElse: () => UserRole.facilitator,
       ),
       email: map['email'],
-      passwordHash: map['passwordHash'],
+      password: map['password'],
     );
-  }
+  }*/
+
+  factory User.fromMap(Map<String, dynamic> map) {
+  return User(
+    id: map['_id'] ?? '', // changed from 'id' to '_id'
+    name: map['name'] ?? '',
+    role: UserRole.values.firstWhere(
+      (e) => e.toString().split('.').last == map['role'], // safer comparison
+      orElse: () => UserRole.facilitator,
+    ),
+    email: map['email'] ?? '',
+    password: map['password'],
+  );
+}
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -104,7 +118,7 @@ class User {
       'name': name,
       'role': role.toString(),
       'email': email,
-      'passwordHash': passwordHash,
+      'password': password,
     };
   }
 
