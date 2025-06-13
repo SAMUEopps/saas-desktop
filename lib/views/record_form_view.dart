@@ -23,6 +23,7 @@ class _RecordFormViewState extends State<RecordFormView> with SingleTickerProvid
   final _cashSaleNoController = TextEditingController();
   final _quotationNoController = TextEditingController();
   final _amountController = TextEditingController();
+  bool _isLoading = false;
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -119,7 +120,7 @@ class _RecordFormViewState extends State<RecordFormView> with SingleTickerProvid
     }
   }
 
-  void _submitForm() {
+  /*void _submitForm() {
     if (_formKey.currentState!.validate()) {
       if (_selectedFacilitator == null || _selectedStoreManager == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,7 +152,52 @@ class _RecordFormViewState extends State<RecordFormView> with SingleTickerProvid
           .addRecord(record)
           .then((_) => Navigator.of(context).pop());
     }
+  }*/
+
+  void _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    if (_selectedFacilitator == null || _selectedStoreManager == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a facilitator and store manager')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true); // Start loading
+
+    try {
+      final record = Record(
+        date: _selectedDate,
+        time: DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          _selectedTime.hour,
+          _selectedTime.minute,
+        ),
+        customerName: _customerNameController.text,
+        invoiceNo: _selectedRecordType == RecordType.invoice ? _invoiceNoController.text : '',
+        cashSaleNo: _selectedRecordType == RecordType.cashSale ? _cashSaleNoController.text : '',
+        quotationNo: _selectedRecordType == RecordType.quotation ? _quotationNoController.text : '',
+        facilitator: _selectedFacilitator!,
+        amount: _selectedRecordType == RecordType.invoice ? 0.0 : _amount,
+        createdBy: _selectedStoreManager!,
+        createdAt: DateTime.now(),
+      );
+
+      await Provider.of<RecordController>(context, listen: false).addRecord(record);
+
+      Navigator.of(context).pop(); // Close modal or screen
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save record: $error')),
+      );
+    } finally {
+      setState(() => _isLoading = false); // End loading
+    }
   }
+}
+
 
   void _cancelForm() {
     Navigator.of(context).pop();
@@ -567,7 +613,7 @@ class _RecordFormViewState extends State<RecordFormView> with SingleTickerProvid
                             const SizedBox(height: 24),
                             
                             // Save and Cancel Buttons
-                            Row(
+                           /* Row(
                               children: [
                                 Expanded(
                                   child: ElevatedButton(
@@ -614,7 +660,65 @@ class _RecordFormViewState extends State<RecordFormView> with SingleTickerProvid
                                   ),
                                 ),
                               ],
-                            ),
+                            ),*/
+                            Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _submitForm,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue.shade600,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                    shadowColor: Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'SAVE',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _isLoading ? null : _cancelForm,
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: Colors.blue.shade400, width: 1),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'CANCEL',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                      color: Colors.blue.shade400,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
                           ],
                         ),
                       ),
